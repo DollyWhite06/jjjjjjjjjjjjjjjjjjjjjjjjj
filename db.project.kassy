@@ -1,0 +1,118 @@
+//primero crea las tablas y usuarios en sql mija
+
+
+import csv
+import random
+from faker import Faker
+
+fake = Faker()
+
+file_path = "libros.csv"
+num_books = 100000
+
+with open(file_path, "w", newline="") as file:
+    writer = csv.writer(file)
+    writer.writerow(["ISBN", "title", "autor_license", "editorial", "pages", "year", "genre", "language", "format", "sinopsis", "content"])
+    
+    for _ in range(num_books):
+        writer.writerow([
+            fake.isbn13(), 
+            fake.sentence(nb_words=6), 
+            fake.random_int(min=1000, max=9999), 
+            fake.company(), 
+            fake.random_int(min=50, max=1000), 
+            fake.random_int(min=1900, max=2024), 
+            fake.word(), 
+            fake.language_name(), 
+            fake.word(), 
+            fake.paragraph(), 
+            fake.text(max_nb_chars=500)
+        ])
+//bash time python script_generador_csv.py
+//bash time mysql -u UsuarioA -p -e "LOAD DATA INFILE 'libros.csv' INTO TABLE Libro FIELDS TERMINATED BY ',' IGNORE 1 ROWS;"
+
+
+// sql: START TRANSACTION;
+INSERT INTO Libro (ISBN, title, autor_license, editorial, pages, year, genre, language, format, sinopsis, content) 
+VALUES
+('978-3-16-148410-0', 'Libro Prueba', '12345', 'Editorial X', 300, 2023, 'Ficción', 'Español', 'Digital', 'Una sinopsis', 'Contenido...');
+COMMIT;
+
+
+//bash time mysql -u UsuarioA -p -e "source insertar_libros.sql"
+
+
+//bash time mysql -u UsuarioA -p -e "SELECT * FROM Libro INTO OUTFILE '/path/libros_1.csv' FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n';"
+
+
+//bash time for i in {1..100}; do mysql -u UsuarioA -p -e "LOAD DATA INFILE '/path/libros_$i.csv' INTO TABLE Libro FIELDS TERMINATED BY ',' IGNORE 1 ROWS;"; done
+
+
+
+
+//sql : SELECT 
+    MAX(pages) AS max_pages,
+    MIN(pages) AS min_pages,
+    AVG(pages) AS avg_pages,
+    MAX(year) AS newest_year,
+    MIN(year) AS oldest_year,
+    COUNT(*) AS total_books
+FROM Libro;
+
+
+//bash : time mysql -u UsuarioA -p -e "source query_metricas.sql"
+
+
+file_path = "autores.csv"
+num_authors = 150000
+
+with open(file_path, "w", newline="") as file:
+    writer = csv.writer(file)
+    writer.writerow(["license", "name", "lastName", "secondLastName", "year"])
+    
+    for _ in range(num_authors):
+        writer.writerow([
+            fake.random_int(min=1000, max=9999), 
+            fake.first_name(), 
+            fake.last_name(), 
+            fake.last_name(), 
+            fake.random_int(min=1900, max=2024)
+        ])
+
+
+//bash time mysql -u UsuarioB -p -e "LOAD DATA INFILE 'autores.csv' INTO TABLE Autor FIELDS TERMINATED BY ',' IGNORE 1 ROWS;"
+
+
+//bash : time mysql -u root -p -e "SELECT * FROM Libro INTO OUTFILE 'libros_export.csv' FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n';"
+time mysql -u root -p -e "SELECT * FROM Autor INTO OUTFILE 'autores_export.csv' FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n';"
+
+
+//bash mongoimport --db Biblioteca --collection libros --type csv --file libros_export.csv --headerline
+mongoimport --db Biblioteca --collection autores --type csv --file autores_export.csv --headerline
+
+
+//sql : DROP TABLE Libro;
+DROP TABLE Autor;
+
+
+//bash: mongoexport --db Biblioteca --collection libros --out libros_mongo.json
+mongoexport --db Biblioteca --collection autores --out autores_mongo.json
+
+
+//sql: CREATE TABLE ...;
+LOAD DATA INFILE 'libros_mongo.json' INTO TABLE Libro;
+
+
+//bash:time mysqldump -u root -p Biblioteca > backup.sql
+time mysql -u root -p Biblioteca < backup.sql
+
+
+//bash:time mysql -u otroUsuario -p -e "INSERT INTO Autor (license, name) VALUES ('9999', 'Fake');"
+time mysql -u otroUsuario -p -e "INSERT INTO Libro (ISBN, title) VALUES ('978-9999-9999-9', 'Fake');"
+
+
+//bash:mongoexport --db Biblioteca --collection libros --fields "ISBN,year,pages" --out old_books.csv
+
+
+//sql:CREATE TABLE old_books (ISBN VARCHAR(16), year SMALLINT, pages SMALLINT);
+LOAD DATA INFILE 'old_books.csv' INTO TABLE old_books;
