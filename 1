@@ -1,0 +1,23 @@
+const { execSync } = require('child_process');
+const fs = require('fs');
+const tiempos = [];
+
+function medirTiempo(comando, descripcion) {
+  console.log(`\n>> ${descripcion}`);
+  const start = Date.now();
+  execSync(comando, { stdio: 'inherit' });
+  const end = Date.now();
+  const tiempoSegundos = ((end - start) / 1000).toFixed(2);
+  console.log(`==> Tiempo: ${tiempoSegundos}s`);
+  tiempos.push({ descripcion, tiempo: parseFloat(tiempoSegundos) });
+}
+
+medirTiempo('node generador_aleatorio.js', 'Generar 300,000 datos');
+medirTiempo('node database_performance.js', 'Importar CSV a Cryptos');
+medirTiempo('node exportarCryptos.js', 'Exportar 1000 registros de Cryptos');
+medirTiempo('node importar_compras.js', 'Importar CSV a Compras');
+medirTiempo('mysqldump -u root Respaldo Compras > dump_compras.sql', 'Generar dump de Compras');
+medirTiempo('mysql -u root Respaldo < dump_compras.sql', 'Importar dump a Respaldo');
+
+// Guardar datos en JSON
+fs.writeFileSync('metricas.json', JSON.stringify(tiempos, null, 2));
