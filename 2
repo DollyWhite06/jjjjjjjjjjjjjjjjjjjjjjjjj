@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Métricas MySQL</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    canvas { max-width: 800px; margin: auto; display: block; }
+    body { font-family: sans-serif; text-align: center; }
+  </style>
+</head>
+<body>
+  <h2>Gráficos de rendimiento - MySQL</h2>
+  <canvas id="grafico"></canvas>
+  <script>
+    fetch('metricas.json')
+      .then(res => res.json())
+      .then(data => {
+        const labels = data.map(m => m.descripcion);
+        const tiempos = data.map(m => m.tiempo);
+        new Chart(document.getElementById('grafico'), {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Tiempo (segundos)',
+              data: tiempos,
+              backgroundColor: 'rgba(54, 162, 235, 0.7)',
+              borderColor: 'rgba(54, 162, 235, 1)',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            scales: {
+              y: { beginAtZero: true }
+            }
+          }
+        });
+      });
+  </script>
+</body>
+</html>
